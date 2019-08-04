@@ -1,5 +1,5 @@
 aws cloudformation update-stack \
 --stack-name udacity-nano-project-2 \
---template-body ./templates/network.yml \
---parameters ./templates/network-params.json \
+--template-body file://./templates/network.yml \
+--parameters file://./templates/network-params.json \
 --region=us-west-2

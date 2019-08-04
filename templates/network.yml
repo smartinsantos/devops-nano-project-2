@@ -34,7 +34,6 @@ Parameters:
 
 Resources:
     # Creates the virtual private network
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc.html
     VPC: 
         Type: AWS::EC2::VPC
         Properties:
@@ -43,23 +42,20 @@ Resources:
             Tags: 
                 - Key: Name 
                   Value: !Ref EnvironmentName
-    # Creates an internet gateway
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-internetgateway.html
+    
     InternetGateway:
         Type: AWS::EC2::InternetGateway
         Properties:
             Tags:
                 - Key: Name
                   Value: !Ref EnvironmentName
-    # Attaches the internet gateway to the virtual private network
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html       
+            
     InternetGatewayAttachment:
         Type: AWS::EC2::VPCGatewayAttachment
         Properties:
             InternetGatewayId: !Ref InternetGateway
             VpcId: !Ref VPC
-    # Creates a subnet in the virtual private network
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
+
     PublicSubnet1: 
         Type: AWS::EC2::Subnet
         Properties:
@@ -103,29 +99,4 @@ Resources:
             Tags: 
                 - Key: Name 
                   Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
-    # Specifies an Elastic IP (EIP) address and can, optionally, associate it with an Amazon EC2 instance.
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-eip.html
-    NatGateway1EIP:
-        Type: AWS::EC2::EIP
-        DependsOn: InternetGatewayAttachment
-        Properties: 
-            Domain: vpc
 
-    NatGateway2EIP:
-        Type: AWS::EC2::EIP
-        DependsOn: InternetGatewayAttachment
-        Properties:
-            Domain: vpc
-    # Specifies a network address translation (NAT) gateway in the specified public subnet
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-natgateway.html
-    NatGateway1: 
-        Type: AWS::EC2::NatGateway
-        Properties: 
-            AllocationId: !GetAtt NatGateway1EIP.AllocationId
-            SubnetId: !Ref PublicSubnet1
-
-    NatGateway2: 
-        Type: AWS::EC2::NatGateway
-        Properties:
-            AllocationId: !GetAtt NatGateway2EIP.AllocationId
-            SubnetId: !Ref PublicSubnet2
