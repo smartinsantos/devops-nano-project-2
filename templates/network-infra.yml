@@ -371,15 +371,14 @@ Resources:
 
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listener.html
     # Specifies a listener for an Application Load Balancer or Network Load Balancer.
-    WebServerLoadBalancer:
+    WebServerLoadBalancerListener:
         Type: AWS::ElasticLoadBalancingV2::Listener
         Properties:
             DefaultActions:
             -   Type: forward
                 TargetGroupArn:
                     Ref: WebServerTargetGroup
-            LoadBalancerArn:
-                Ref: WebServerLoadBalancer
+            LoadBalancerArn: !Ref WebServerLoadBalancer
             Port: '80'
             Protocol: HTTP
 
@@ -394,7 +393,7 @@ Resources:
             Conditions:
             -   Field: path-pattern
                 Values: [/]
-            ListenerArn: !Ref 'WebServerLoadBalancer'
+            ListenerArn: !Ref 'WebServerLoadBalancerListener'
             Priority: 1
 
 Outputs: 
