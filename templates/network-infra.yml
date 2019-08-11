@@ -31,6 +31,14 @@ Parameters:
         Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
         Type: String
         Default: 10.0.3.0/24
+    
+    LoadBalancerSecGroupName:
+        Description: A security group name
+        Type: String
+
+    WebServerSecGroupName:
+        Description: A security group name
+        Type: String
 
 Resources:
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc.html
@@ -231,6 +239,7 @@ Resources:
                     -   arn:aws:s3:::devops-nano-project2/*
             Roles:
             -   Ref: IamRole
+
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-instanceprofile.html
     # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html
     # Creates a new instance profile.
@@ -240,6 +249,46 @@ Resources:
             Path: "/"
             Roles:
             - Ref: IamRole
+
+    # Specifies a security group.
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+    LoadBalancerSecGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties: 
+            GroupDescription: Allows http inbound / outbound to load balancer
+            GroupName: !Ref LoadBalancerSecGroupName
+            VpcId: !Ref VPC
+            SecurityGroupIngress: 
+                - IpProtocol: tcp
+                  FromPort: 80
+                  ToPort: 80
+                  CidrIp: 0.0.0.0/0
+            SecurityGroupEgress: 
+                - IpProtocol: tcp
+                  FromPort: 80
+                  ToPort: 80
+                  CidrIp: 0.0.0.0/0
+    
+    WebServerSecGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties: 
+            GroupDescription: Allows http-ssh inbound / unlimited outbound to web servers
+            GroupName: !Ref WebServerSecGroupName
+            VpcId: !Ref VPC
+            SecurityGroupIngress: 
+                - IpProtocol: tcp
+                  FromPort: 80
+                  ToPort: 80
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 22
+                  ToPort: 22
+                  CidrIp: 0.0.0.0/0
+            SecurityGroupEgress: 
+                - IpProtocol: tcp
+                  FromPort: 0
+                  ToPort: 65535
+                  CidrIp: 0.0.0.0/
 
 Outputs: 
 
