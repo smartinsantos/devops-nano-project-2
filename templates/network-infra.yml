@@ -195,6 +195,8 @@ Resources:
             RouteTableId: !Ref PrivateRouteTable2
             SubnetId: !Ref PrivateSubnet2
 
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
+    # Creates a new role for your AWS account.
     IamRole:
         Type: AWS::IAM::Role
         Properties:
@@ -210,7 +212,9 @@ Resources:
                     Action:
                     - sts:AssumeRole
             Path: "/"
-        
+
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html
+    # Adds or updates an inline policy document that is embedded in the specified IAM user, group, or role.
     IamRolePolicies:
         Type: AWS::IAM::Policy
         Properties:
@@ -224,11 +228,12 @@ Resources:
                     -   s3:Get*
                     -   s3:List*
                     Resource: 
-                    -   arn:aws:s3:::my-example-website
-                    -   arn:aws:s3:::my-example-website/*
+                    -   arn:aws:s3:::devops-nano-project2/*
             Roles:
             -   Ref: IamRole
-    
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-instanceprofile.html
+    # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html
+    # Creates a new instance profile.
     IamRoleInstanceProfile:
         Type: AWS::IAM::InstanceProfile
         Properties:
