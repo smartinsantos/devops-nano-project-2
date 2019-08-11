@@ -250,7 +250,8 @@ Resources:
                     Action: 
                     -   s3:Get*
                     -   s3:List*
-                    Resource: 
+                    Resource:
+                    -   arn:aws:s3:::devops-nano-project2
                     -   arn:aws:s3:::devops-nano-project2/*
             Roles:
             -   Ref: IamRole
@@ -311,13 +312,31 @@ Resources:
             UserData:
                 Fn::Base64: !Sub |
                     #!/bin/bash
+                    # update apt-get
                     apt-get update -y
-                    apt-get install unzip awscli -y
-                    apt-get install apache2 -y
-                    systemctl start apache2.service
-                    cd /var/www/html
-                    aws s3 cp s3://devops-nano-project2/example-website.zip
-                    unzip -o example-website.zip
+                    # install apps
+                    apt-get install -y \
+                    apt-transport-https \
+                    ca-certificates \
+                    curl \
+                    gnupg-agent \
+                    software-properties-common \
+                    awscli
+                    # get third party repositories
+                    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+                    add-apt-repository \
+                    "deb [arch=amd64] https://download.docker.com/linux/ubuntu
+                    $(lsb_release -cs) \
+                    stable"
+                    apt-get update -y
+                    # install docker
+                    apt-get install -y docker-ce docker-ce-cli containerd.io
+                    # configure web app on nginx
+                    usermod -aG docker ubuntu
+                    mkdir /web-app/
+                    chmod 777 -R /web-app/
+                    aws s3 cp s3://devops-nano-project2/example-website /web-app/ --recursive
+                    docker run -l service=nginx --name nginx-app -p 80:80 -d -v /web-app/:/usr/share/nginx/html nginx
             ImageId: !Ref AmiId
             IamInstanceProfile: !Ref IamRoleInstanceProfile
             SecurityGroups:
