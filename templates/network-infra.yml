@@ -43,21 +43,6 @@ Resources:
             Tags: 
                 - Key: Name 
                   Value: !Ref EnvironmentName
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-internetgateway.html
-    # Allocates an internet gateway for use with a VPC.
-    InternetGateway:
-        Type: AWS::EC2::InternetGateway
-        Properties:
-            Tags:
-                - Key: Name
-                  Value: !Ref EnvironmentName
-    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html
-    # Attaches an internet gateway to a VPC        
-    InternetGatewayAttachment:
-        Type: AWS::EC2::VPCGatewayAttachment
-        Properties:
-            InternetGatewayId: !Ref InternetGateway
-            VpcId: !Ref VPC
 
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
     # Specifies a subnet for a VPC.
@@ -105,6 +90,22 @@ Resources:
                 - Key: Name 
                   Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
 
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-internetgateway.html
+    # Allocates an internet gateway for use with a VPC.
+    InternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+                - Key: Name
+                  Value: !Ref EnvironmentName
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html
+    # Attaches an internet gateway to a VPC        
+    InternetGatewayAttachment:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            InternetGatewayId: !Ref InternetGateway
+            VpcId: !Ref VPC
+
     #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-eip.html
     # Specifies an Elastic IP (EIP) address and can, optionally, associate it with an Amazon EC2 instance.
     NatGateway1EIP:
@@ -118,6 +119,20 @@ Resources:
         DependsOn: InternetGatewayAttachment
         Properties:
             Domain: vpc
+
+    #AWS::EC2::NatGateway
+    #Specifies a network address translation (NAT) gateway in the specified public subnet.
+    NatGateway1: 
+        Type: AWS::EC2::NatGateway
+        Properties: 
+            AllocationId: !GetAtt NatGateway1EIP.AllocationId
+            SubnetId: !Ref PublicSubnet1
+
+    NatGateway2: 
+        Type: AWS::EC2::NatGateway
+        Properties:
+            AllocationId: !GetAtt NatGateway2EIP.AllocationId
+            SubnetId: !Ref PublicSubnet2
 
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route-table.html
     # Specifies a route table for a specified VPC.
@@ -166,7 +181,7 @@ Resources:
         Properties:
             RouteTableId: !Ref PrivateRouteTable1
             DestinationCidrBlock: 0.0.0.0/0
-            NatGatewayId: !Ref NatGateway1EIP
+            NatGatewayId: !Ref NatGateway1
 
     PrivateSubnet1RouteTableAssociation:
         Type: AWS::EC2::SubnetRouteTableAssociation
@@ -187,7 +202,7 @@ Resources:
         Properties:
             RouteTableId: !Ref PrivateRouteTable2
             DestinationCidrBlock: 0.0.0.0/0
-            NatGatewayId: !Ref NatGateway2EIP
+            NatGatewayId: !Ref NatGateway2
 
     PrivateSubnet2RouteTableAssociation:
         Type: AWS::EC2::SubnetRouteTableAssociation
