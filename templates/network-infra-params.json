@@ -22,5 +22,13 @@
   {
     "ParameterKey": "PrivateSubnet2CIDR",
     "ParameterValue": "10.0.3.0/24"
+  },
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t3.micro"
+  },
+  {
+    "ParameterKey": "AmiId",
+    "ParameterValue": "ami-0b37e9efc396e4c38"
   }
 ]

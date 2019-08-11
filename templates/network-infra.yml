@@ -31,6 +31,14 @@ Parameters:
         Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
         Type: String
         Default: 10.0.3.0/24
+
+    InstanceType:
+        Description: "Ec2 Instances Type"
+        Type: String
+    
+    AmiId:
+        Description: "Ec2 Instance Image Id"
+        Type: String
     
 Resources:
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc.html
@@ -294,6 +302,89 @@ Resources:
                   FromPort: 0
                   ToPort: 65535
                   CidrIp: 0.0.0.0/0
+
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-launchconfig.html
+    # Specifies an Amazon EC2 Auto Scaling launch configuration that can be used by an Auto Scaling group to configure Amazon EC2 instances.
+    WebServerLaunchConfig: 
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash
+                    apt-get update -y
+                    apt-get install unzip awscli -y
+                    apt-get install apache2 -y
+                    systemctl start apache2.service
+                    cd /var/www/html
+                    aws s3 cp s3://devops-nano-project2/example-website.zip
+                    unzip -o example-website.zip
+            ImageId: !Ref AmiId
+            IamInstanceProfile: !Ref IamRoleInstanceProfile
+            SecurityGroups:
+            -   Ref: WebServerSecGroup
+            InstanceType: !Ref 'InstanceType'
+            BlockDeviceMappings:
+            -   DeviceName: "/dev/sdk"
+                Ebs:
+                    VolumeSize: '10'
+
+    WebServerTargetGroup:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            HealthCheckIntervalSeconds: 10
+            HealthCheckPath: /
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 8
+            HealthyThresholdCount: 2
+            Port: 80
+            Protocol: HTTP
+            UnhealthyThresholdCount: 5
+            VpcId: !Ref VPC
+
+    WebServerGroup:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            VPCZoneIdentifier:  
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2 
+            LaunchConfigurationName:
+                Ref: WebServerLaunchConfig
+            MinSize: '4'
+            MaxSize: '5'
+            TargetGroupARNs:
+            -   Ref: WebServerTargetGroup
+
+    WebServerLoadBalancer:
+        Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+        Properties:
+            SecurityGroups:
+            - Ref: LoadBalancerSecGroup
+            Subnets:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+    Listener:
+        Type: AWS::ElasticLoadBalancingV2::Listener
+        Properties:
+            DefaultActions:
+            -   Type: forward
+                TargetGroupArn:
+                    Ref: WebServerTargetGroup
+            LoadBalancerArn:
+                Ref: WebServerLoadBalancer
+            Port: '80'
+            Protocol: HTTP
+
+    WebServerLoadBalancerListenerRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+            -   Type: forward
+                TargetGroupArn: !Ref 'WebServerTargetGroup'
+            Conditions:
+            -   Field: path-pattern
+                Values: [/]
+            ListenerArn: !Ref 'Listener'
+            Priority: 1
 
 Outputs: 
 
