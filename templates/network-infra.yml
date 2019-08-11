@@ -1,5 +1,5 @@
 Description: >
-    devops-nano-project-2 / Sergio Martin / Network
+    devops-nano-project-2 / Sergio Martin
 
 Parameters:
 
@@ -457,3 +457,9 @@ Outputs:
         Value: !Ref PrivateRouteTable2
         Export:
           Name: !Sub ${EnvironmentName}-PRI2-RT
+
+    WebAppLoadBalancerDNSName:
+        Description: Public URL for loadbalancer
+        Value: !Join [ "", [ 'http://', !GetAtt WebServerLoadBalancer.DNSName ]]
+        Export:
+            Name: !Sub ${EnvironmentName}-WEB-SERVER-LB-URL
